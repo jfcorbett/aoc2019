@@ -15,19 +15,56 @@ fn main() {
         if c.len() > 0 {
             let mut cabpos = HashSet::new();
             let movs = c.split(",");
+            let mut x = 0;
+            let mut y = 0;
             for m in movs {
                 let (dir, n) = m.split_at(1);
                 let n = n.parse::<i32>().unwrap();
-                // TODO cabpos.insert((x,y));
-                cabpos.insert((dir.len(), n));
+                let (dx, dy) = incr(dir);
+                for _ in 0..n {
+                    x += dx;
+                    y += dy;
+                    cabpos.insert((x,y));
+                }
             }
             pos_by_cable.push(cabpos);
         }
     }
-    println!("{:?}", pos_by_cable);
+    // println!("{:?}", pos_by_cable);
     // Find intersections
+    let c1: &HashSet<(i32,i32)> = &pos_by_cable[0];
+    let c2: &HashSet<(i32,i32)> = &pos_by_cable[1];
+    let crossings = c1.intersection(c2);
+
     // Calculate Manhattan distances
+    let mut mds: Vec<i32> = Vec::new();
+    for c in crossings {
+        mds.push((c.0).abs() + (c.1).abs());
+    }
+    mds.sort(); 
+    println!("{:?}", mds);
     // Pick closest
 }
 
+fn incr(dir: &str) -> (i32, i32) {
+    match dir {
+        "R" => (1,0),
+        "L" => (-1,0),
+        "U" => (0,1),
+        "D" => (0,-1),
+        _ => panic!("WTF is {}", dir),
+    }
+}
 //fn steps(start_pos: &Tuple, movement: &String) {}
+
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_incr() {
+        assert_eq!(incr("R"), (1,0));
+    }
+}
