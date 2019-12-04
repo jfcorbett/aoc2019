@@ -41,9 +41,9 @@ fn main() {
     for c in crossings {
         mds.push((c.0).abs() + (c.1).abs());
     }
-    mds.sort(); 
-    println!("{:?}", mds);
     // Pick closest
+    mds.sort(); 
+    println!("{:?}", mds[0]);
 }
 
 fn incr(dir: &str) -> (i32, i32) {
