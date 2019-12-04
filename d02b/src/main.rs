@@ -18,17 +18,25 @@ fn main() {
             // println!("{}", intcode);
         }
     }
+
+    'nl: for noun in 0..99 {
+        'vl: for verb in 0..99 {
+            let mut prog = iz.clone();
+            prog[1] = noun;
+            prog[2] = verb;
+            if run_prog(&prog)[0] == 19690720 {
+                println!("{}", 100 * noun + verb);
+                break 'nl;
+            }
+
+        }
+    }
 }
 
 fn run_prog(prog: &Vec<i32>) -> Vec<i32> {
     let mut iz = prog.clone();
-    //iz.copy_from_slice(&prog);
-    println!("*-*-*-*-*-*");
-    println!("{:?}", prog);
-    println!("{:?}", iz);
     let mut pos = 0;
     while iz[pos] != 99 {
-        println!("{}", iz[pos]);
         let target = iz[pos + 3] as usize;
         let i1 = iz[pos + 1] as usize;
         let i2 = iz[pos + 2] as usize;
@@ -55,9 +63,10 @@ mod tests {
 
     #[test]
     fn test_progs_equal() {
-        assert!(progs_equal(&vec![1, 0, 0, 0, 99], &vec![1, 0, 0, 0, 99]));
-        assert!(!progs_equal(&vec![1, 0, 0, 0, 99], &vec![1, 666, 0, 0, 99]));
-        assert!(!progs_equal(&vec![1, 0, 0, 0, 99], &vec![1, 0, 0, 0]));
+        assert!(progs_equal(&vec![1, 0, 0, 0, 99], &vec![1, 0, 0, 0, 99]));  // same! yay!
+        
+        assert!(!progs_equal(&vec![1, 0, 0, 0, 99], &vec![1, 666, 0, 0, 99]));  // one diff
+        assert!(!progs_equal(&vec![1, 0, 0, 0, 99], &vec![1, 0, 0, 0]));  // unequal lengths
     }
 
     #[test]
