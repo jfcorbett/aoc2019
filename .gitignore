@@ -1,2 +1,6 @@
 **/target
 **/*.rs.bk
+
+# VS Code extension Code Runner dumps debug stuff in src...
+*.pdb
+*.exe
