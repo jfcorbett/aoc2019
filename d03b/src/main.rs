@@ -67,13 +67,13 @@ fn incr(dir: &str) -> (i32, i32) {
 
 fn main() {
     let whole_file = read_whole_file(Path::new("input")).unwrap(); // String
-    // let moves = parse_all_moves(&whole_file);
     
     // Get distance to each step along the cables
     let step_dists = parse_all_moves(&whole_file).iter().map(|movs| trace_step_dists(&movs)).collect::<Vec<_>>();
-    // Now just keep the steps to find the intersections (crossings)
+    
+    // Now forget about the distances, and just keep the steps (positions) to find the intersections (crossings)
     let steps = step_dists.iter().map(|stps| stps.keys().collect::<HashSet<_>>()).collect::<Vec<_>>();
-    // let crossings = steps[0].intersection(&steps[1]).collect::<HashSet<_>>();
+    
     // Get intersections and look up total distance to each
     let min_dist = &steps[0].intersection(&steps[1]).map(|&c| step_dists[0].get(c).unwrap() + step_dists[1].get(c).unwrap()).min();
 
