@@ -1,6 +1,9 @@
 use std::{
     collections::{HashMap},
-    fs::File,
+};
+
+use std::{
+        fs::File,
     io::{Read, Result},
     path::Path,
 };
@@ -17,7 +20,18 @@ fn main() {
     let whole_file = read_whole_file(Path::new("input")).unwrap(); // String
     let pd = make_parent_dict(&whole_file);
     let lineages = ["YOU", "SAN"].iter().map(|x| get_lineage(x, &pd)).collect::<Vec<_>>();
-    println!("{:?}", lineages);
+    let mut num_common = 0;
+    for (i, l) in lineages[0].iter().enumerate() {
+        if String::from(l) != lineages[1][i] {
+            num_common = i as u32;
+            break;
+        }
+    }
+
+    // count each branch from the point they diverge
+    // add the two
+    println!("l0:{} l1:{} common:{}", lineages[0].len(), lineages[1].len(), num_common);
+    print!("{}", lineages[0].len() as u32 + lineages[1].len() as u32 - 2*num_common - 2);
 }
 
 
