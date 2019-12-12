@@ -28,7 +28,7 @@ fn main() {
 
     // let xx = (0..n_layers)
     //     .map(|l| nums[l*n_pixels..(l+1)*n_pixels].iter().filter(|&n| *n == 0_u8).count());
-    let xx = (0..n_layers)
+    let fewest_zeros_counts = (0..n_layers)
         .map(|l| &nums[l*n_pixels..(l+1)*n_pixels])
         .map(|l| (0..=2).map(|d| l.iter().filter(|&n| *n == d).count()).collect::<Vec<_>>())
         .min_by(|a,b| a[0].cmp(&b[0])).unwrap();
@@ -40,5 +40,5 @@ fn main() {
     // }
 
 
-    println!("{:?}", xx[1]*xx[2]);
+    println!("{:?}", fewest_zeros_counts[1]*fewest_zeros_counts[2]);
 }
