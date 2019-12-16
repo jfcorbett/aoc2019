@@ -18,19 +18,10 @@ fn parse_reac_specs(input: &str) -> HashMap<String, (u32, Vec<(u32, String)>)> {
 }
 
 fn main() {
-    // let wrokfluge = read_whole_file(Path::new("input")).unwrap();
-    // let reac_specs = parse_reac_specs(&wrokfluge);
-    let reac_specs = parse_reac_specs("9 ORE => 2 A
-8 ORE => 3 B
-7 ORE => 5 C
-3 A, 4 B => 1 AB
-5 B, 7 C => 1 BC
-4 C, 1 A => 1 CA
-2 AB, 3 BC, 4 CA => 1 FUEL");
+    let wrokfluge = read_whole_file(Path::new("input")).unwrap();
+    let reac_specs = parse_reac_specs(&wrokfluge);
     let mut leftovers = HashMap::new();
     println!("{}", ore_needed("FUEL", 1, &reac_specs, &mut leftovers));
-
-    println!("{:?}", leftovers);
 }
 
 fn parse_chem_spec(output: &str) -> (u32, String) {
@@ -69,7 +60,7 @@ fn ore_needed(chem: &str, num: u32, reac_specs: &HashMap<String, (u32, Vec<(u32,
         let (num_out, inputs) = &reac_specs[chem];
         let num_reacs = (num_needed - 1) / num_out + 1;        
         *num_leftover += (num_reacs * num_out) - num_needed; 
-        return inputs.iter().map(|inp| num_reacs * ore_needed(&inp.1, inp.0, reac_specs, leftovers)).sum::<u32>()
+        return inputs.iter().map(|inp| ore_needed(&inp.1, num_reacs*inp.0, reac_specs, leftovers)).sum::<u32>()
     }
 }
 
@@ -139,13 +130,13 @@ mod tests {
     #[test]
     fn test_ore_needed_example2() {
         let reac_specs = parse_reac_specs("157 ORE => 5 NZVS
-7 DCFZ, 7 PSHF => 2 XJWVT
-179 ORE => 7 PSHF
 165 ORE => 6 DCFZ
 44 XJWVT, 5 KHKGT, 1 QDVJ, 29 NZVS, 9 GPVTF, 48 HKGWZ => 1 FUEL
-177 ORE => 5 HKGWZ
-165 ORE => 2 GPVTF
 12 HKGWZ, 1 GPVTF, 8 PSHF => 9 QDVJ
+179 ORE => 7 PSHF
+177 ORE => 5 HKGWZ
+7 DCFZ, 7 PSHF => 2 XJWVT
+165 ORE => 2 GPVTF
 3 DCFZ, 7 NZVS, 5 HKGWZ, 10 PSHF => 8 KHKGT");
         assert_eq!(ore_needed("FUEL", 1, &reac_specs, &mut HashMap::new()), 13312);
     }
