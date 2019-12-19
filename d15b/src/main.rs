@@ -1,4 +1,5 @@
 use std::iter::repeat;
+use std::iter::successors;
 
 use std::{
     fs::File,
@@ -15,21 +16,56 @@ fn read_whole_file(s: impl AsRef<Path>) -> Result<String> {
 
 fn main() {
     let zyrgwunk = read_whole_file(Path::new("input")).unwrap();
-    let input = parse_input_sequence(&zyrgwunk);
-    println!("{}", take_to_string(do_phases(input, 100), 8));
+    let input_sequence = parse_input_sequence(&zyrgwunk);
+    // let input_sequence = parse_input_sequence("03036732577212944063491565474664");
+    println!("{:?}", do_it(&input_sequence));
 }
 
-fn extract_message(sequence: Vec<i32>, msg_len: usize, offset_len: usize) -> String {
-    // let offset = take_to_string(sequence, offset_len).parse::<usize>().expect("Couldn't parse message offset");
-    // sequence[offset..offset+msg_len].iter().map(|n| n.to_string()).collect::<Vec<String>>().join("")
-    unimplemented!();
+fn do_it(input_sequence: &Vec<i32>) -> String {
+    let offset = dbg!(get_offset(input_sequence, 7));
+    let mut seq_tail:Vec<i32> = repeat(input_sequence.iter()).take(10_000).flatten().skip(offset).map(|n| *n).collect();
+    // repeat_sequence(input_sequence, 10_000)[offset..].iter().rev().map(|n| *n).collect();
+    for _ in 0..100 {
+        // println!("{:?}", seq_tail[seq_tail.len()-8..].to_vec());
+        let mut cs: i32 = 0;
+        for i in (0..seq_tail.len()).rev() {
+            cs += seq_tail[i];
+            cs = cs % 10;
+            seq_tail[i] = cs;
+        }
+    }
+    seq_tail.iter().take(8).map(|n| n.to_string()).collect::<Vec<String>>().join("")
+    
 }
 
-fn take_to_string(sequence: Vec<i32>, num: usize) -> String {
+// *************************************************************************************
+// Almost everything below this point is useless (except for the parsing bits and pieces)
+// *************************************************************************************
+
+fn decode_message(input_sequence: &Vec<i32>) -> String {
+    extract_message(&do_phases(repeat_sequence(input_sequence, 10_000), 100), 8, get_offset(input_sequence, 7)) 
+}
+
+fn repeat_sequence(sequence: &Vec<i32>, num_repeats: usize) -> Vec<i32> {
+    // sequence.iter().map(|n| *n).cycle().take(sequence.len() * num_repeats).collect::<Vec<_>>()
+    repeat(sequence.iter()).take(num_repeats).flatten().map(|n| *n).collect::<Vec<_>>()
+
+}
+
+fn extract_message(sequence: &Vec<i32>, msg_len: usize, offset: usize) -> String {
+    sequence[offset..(offset+msg_len)].iter().map(|n| n.to_string()).collect::<Vec<String>>().join("")
+}
+
+fn get_offset(input_sequence: &Vec<i32>, offset_len: usize) -> usize {
+    take_to_string(&input_sequence, offset_len).parse::<usize>().expect("Couldn't parse message offset")
+}
+
+fn take_to_string(sequence: &Vec<i32>, num: usize) -> String {
     sequence[0..num].iter().map(|n| n.to_string()).collect::<Vec<String>>().join("")
 }
 
 fn do_phases(sequence: Vec<i32>, num_phases: usize) -> Vec<i32> {
+    // successors(Some(sequence), |s| Some(do_one_phase(s.to_vec()))).take(num_phases).last().unwrap()
     if num_phases < 1 {
         return sequence;
     }
@@ -75,8 +111,28 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_decode_message() {
+        assert_eq!(decode_message(&parse_input_sequence("03036732577212944063491565474664")), "84462026");
+    }
+
+    #[test]
+    fn test_repeat_sequence() {
+        assert_eq!(repeat_sequence(&vec![1,2,3], 4), vec![1,2,3,1,2,3,1,2,3,1,2,3]);
+    }
+
+    #[test]
+    fn test_extract_message() {
+        assert_eq!(extract_message(&parse_input_sequence("98765432109876543210"), 8, 7), "21098765");
+    }
+
+    #[test]
+    fn test_get_offset() {
+        assert_eq!(get_offset(&parse_input_sequence("03036732577212944063491565474664"), 7), 0303673);
+    }
+
+    #[test]
     fn test_take_to_string() {
-        assert_eq!(take_to_string(vec![1, 2, 3, 4, 5, 6, 7, 8], 5), "12345");
+        assert_eq!(take_to_string(&vec![1, 2, 3, 4, 5, 6, 7, 8], 5), "12345");
     }
 
     #[test]
