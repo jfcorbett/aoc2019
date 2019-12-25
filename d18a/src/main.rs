@@ -34,12 +34,11 @@ impl Maze {
 
     fn interkey_obstacles(&self) -> HashMap<(char, char), (usize, HashSet<char>)> {
         let mut iko = HashMap::new();
-        // TODO include the start pos somehow........ just add it to the list of keys in init?!
         for (from_key, from_keypos) in &self.key_pos {
             for (to_key, obstacles) in self.key_obstacles(*from_keypos) {
-                let key_pair = if *from_key < to_key {(*from_key, to_key)} else {(to_key, *from_key)};
-                if !iko.contains_key(&key_pair) {
-                    iko.insert(key_pair, obstacles);
+                let kp = key_pair(*from_key, to_key);
+                if !iko.contains_key(&kp) {
+                    iko.insert(kp, obstacles);
                 }
             }
 
@@ -49,7 +48,6 @@ impl Maze {
 
     fn key_obstacles(&self, from_pos: (usize, usize)) -> HashMap<char, (usize, HashSet<char>)> {
         let mut key_obst = HashMap::new();
-        // let mut key_od = HashMap::new();
         let mut visited = HashSet::new();
         let mut parent = HashMap::new();
         let mut distance = HashMap::new();
@@ -104,6 +102,10 @@ impl Maze {
     }
 }
 
+fn key_pair(key1: char, key2: char) -> (char, char) {
+    if key1 < key2 {(key1, key2)} else {(key2, key1)}
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -114,7 +116,9 @@ mod tests {
 #b.A.@.a#
 #########");
         let iko = maze.interkey_obstacles();
-        assert_eq!(iko[&('a', 'b')], (6, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
+        assert_eq!(iko[&key_pair('@', 'a')], (2, HashSet::new()));
+        assert_eq!(iko[&key_pair('@', 'b')], (4, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
+        assert_eq!(iko[&key_pair('a', 'b')], (6, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
     }
 
     #[test]
@@ -153,6 +157,14 @@ mod tests {
         assert!(a.contains(&(1,3)));
         assert!(!a.contains(&(0,2)));
         assert!(!a.contains(&(2,2)));
+    }
+
+    #[test]
+    fn test_key_pair() {
+        assert_eq!(('a', 'b'), key_pair('a', 'b'));
+        assert_eq!(('a', 'b'), key_pair('b', 'a'));
+        assert_eq!(('@', 'a'), key_pair('a', '@'));
+        assert_eq!(('@', 'a'), key_pair('@', 'a'));
     }
 
     #[test]
@@ -202,3 +214,4 @@ fn parse_maze(maze: &str) -> Maze {
         door_pos
     }
 }
+
