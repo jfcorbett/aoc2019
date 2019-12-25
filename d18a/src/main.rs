@@ -26,12 +26,27 @@ fn main() {
 
 struct Maze {
     passages: HashSet<(usize, usize)>, 
-    start_pos: (usize, usize), 
     key_pos: BiMap<char, (usize, usize)>, 
     door_pos: BiMap<char, (usize, usize)>,
 }
 
 impl Maze {
+
+    fn interkey_obstacles(&self) -> HashMap<(char, char), (usize, HashSet<char>)> {
+        let mut iko = HashMap::new();
+        // TODO include the start pos somehow........ just add it to the list of keys in init?!
+        for (from_key, from_keypos) in &self.key_pos {
+            for (to_key, obstacles) in self.key_obstacles(*from_keypos) {
+                let key_pair = if *from_key < to_key {(*from_key, to_key)} else {(to_key, *from_key)};
+                if !iko.contains_key(&key_pair) {
+                    iko.insert(key_pair, obstacles);
+                }
+            }
+
+        }
+        iko
+    }
+
     fn key_obstacles(&self, from_pos: (usize, usize)) -> HashMap<char, (usize, HashSet<char>)> {
         let mut key_obst = HashMap::new();
         // let mut key_od = HashMap::new();
@@ -50,13 +65,14 @@ impl Maze {
             // Dequeue, visit and analyze
             let cur_pos = discovered_queue.pop_front().unwrap();
             visited.insert(cur_pos);
-            if self.key_pos.contains_right(&cur_pos) {
+            if self.key_pos.contains_right(&cur_pos) && cur_pos != from_pos {
                 // It's a key! Save distance and set of obstructing doors
                 key_obst.insert(*self.key_pos.get_by_right(&cur_pos).unwrap(), 
                     (distance[&cur_pos], obstructing_doors[&cur_pos].clone()));
             } else if self.door_pos.contains_right(&cur_pos) {
                 // It's a door... Add this door to cur_pos's outdated set of obstructing doors 
-                obstructing_doors.get_mut(&cur_pos).unwrap().insert(*self.door_pos.get_by_right(&cur_pos).unwrap());
+                obstructing_doors.get_mut(&cur_pos).unwrap()
+                    .insert(*self.door_pos.get_by_right(&cur_pos).unwrap());
             }
 
             // Initialize and enqueue unvisited neighbours
@@ -91,6 +107,15 @@ impl Maze {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_interkey_obstacles() {
+        let maze = parse_maze("#########
+#b.A.@.a#
+#########");
+        let iko = maze.interkey_obstacles();
+        assert_eq!(iko[&('a', 'b')], (6, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
+    }
 
     #[test]
     fn test_key_obstacles_ex0() {
@@ -135,7 +160,7 @@ mod tests {
         let maze = parse_maze("#########
 #b.A.@.a#
 #########");
-        assert_eq!(maze.start_pos, (1,5));
+        assert_eq!(maze.key_pos.get_by_left(&'@'), Some(&(1,5)));
 
         assert_eq!(maze.key_pos.get_by_left(&'a'), Some(&(1,7)));
         assert_eq!(maze.key_pos.get_by_right(&(1,1)), Some(&'b'));
@@ -155,20 +180,16 @@ mod tests {
 
 fn parse_maze(maze: &str) -> Maze { 
     let mut passage_pos = HashSet::new();
-    let mut start_pos: (usize, usize) = (0,0);
     let mut key_pos = BiMap::new();
     let mut door_pos = BiMap::new();
 
     for (i, line) in maze.lines().enumerate() {
         for (j, ch) in line.chars().enumerate() {
-            if ch.is_lowercase() {
+            if ch.is_lowercase() || ch == '@' {
                 key_pos.insert(ch, (i,j));
                 passage_pos.insert((i,j));
             } else if ch.is_uppercase() {
                 door_pos.insert(ch.to_lowercase().to_string().chars().next().unwrap(), (i,j));
-                passage_pos.insert((i,j));
-            } else if ch == '@' {
-                start_pos = (i,j);
                 passage_pos.insert((i,j));
             } else if ch == '.' {
                 passage_pos.insert((i,j));
@@ -177,7 +198,6 @@ fn parse_maze(maze: &str) -> Maze {
     }
     return Maze{
         passages: passage_pos, 
-        start_pos, 
         key_pos, 
         door_pos
     }
