@@ -26,28 +26,28 @@ fn main() {
 
 struct Maze {
     passages: HashSet<(usize, usize)>, 
-    key_pos: BiMap<char, (usize, usize)>, 
+    wpt_pos: BiMap<char, (usize, usize)>, 
     door_pos: BiMap<char, (usize, usize)>,
 }
 
 impl Maze {
 
-    fn interkey_obstacles(&self) -> HashMap<(char, char), (usize, HashSet<char>)> {
-        let mut iko = HashMap::new();
-        for (from_key, from_keypos) in &self.key_pos {
-            for (to_key, obstacles) in self.key_obstacles(*from_keypos) {
-                let kp = key_pair(*from_key, to_key);
-                if !iko.contains_key(&kp) {
-                    iko.insert(kp, obstacles);
+    fn waypoint_pair_obstacles(&self) -> HashMap<(char, char), (usize, HashSet<char>)> {
+        let mut wpo = HashMap::new();
+        for (from_key, from_keypos) in &self.wpt_pos {
+            for (to_key, obstacles) in self.waypoint_obstacles(*from_keypos) {
+                let kp = wpt_pair(*from_key, to_key);
+                if !wpo.contains_key(&kp) {
+                    wpo.insert(kp, obstacles);
                 }
             }
 
         }
-        iko
+        wpo
     }
 
-    fn key_obstacles(&self, from_pos: (usize, usize)) -> HashMap<char, (usize, HashSet<char>)> {
-        let mut key_obst = HashMap::new();
+    fn waypoint_obstacles(&self, from_pos: (usize, usize)) -> HashMap<char, (usize, HashSet<char>)> {
+        let mut wpt_obst = HashMap::new();
         let mut visited = HashSet::new();
         let mut parent = HashMap::new();
         let mut distance = HashMap::new();
@@ -63,9 +63,9 @@ impl Maze {
             // Dequeue, visit and analyze
             let cur_pos = discovered_queue.pop_front().unwrap();
             visited.insert(cur_pos);
-            if self.key_pos.contains_right(&cur_pos) && cur_pos != from_pos {
-                // It's a key! Save distance and set of obstructing doors
-                key_obst.insert(*self.key_pos.get_by_right(&cur_pos).unwrap(), 
+            if self.wpt_pos.contains_right(&cur_pos) && cur_pos != from_pos {
+                // It's a waypoint! Save distance and set of obstructing doors
+                wpt_obst.insert(*self.wpt_pos.get_by_right(&cur_pos).unwrap(), 
                     (distance[&cur_pos], obstructing_doors[&cur_pos].clone()));
             } else if self.door_pos.contains_right(&cur_pos) {
                 // It's a door... Add this door to cur_pos's outdated set of obstructing doors 
@@ -89,7 +89,7 @@ impl Maze {
             obstructing_doors.remove(&cur_pos);
         }
         
-        key_obst
+        wpt_obst
     }
 
     fn adj_passages(&self, pos: (usize, usize)) -> Vec<(usize, usize)> {
@@ -102,7 +102,7 @@ impl Maze {
     }
 }
 
-fn key_pair(key1: char, key2: char) -> (char, char) {
+fn wpt_pair(key1: char, key2: char) -> (char, char) {
     if key1 < key2 {(key1, key2)} else {(key2, key1)}
 }
 
@@ -111,28 +111,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_interkey_obstacles() {
+    fn test_waypoint_pair_obstacles() {
         let maze = parse_maze("#########
 #b.A.@.a#
 #########");
-        let iko = maze.interkey_obstacles();
-        assert_eq!(iko[&key_pair('@', 'a')], (2, HashSet::new()));
-        assert_eq!(iko[&key_pair('@', 'b')], (4, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
-        assert_eq!(iko[&key_pair('a', 'b')], (6, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
+        let iko = maze.waypoint_pair_obstacles();
+        assert_eq!(iko[&wpt_pair('@', 'a')], (2, HashSet::new()));
+        assert_eq!(iko[&wpt_pair('@', 'b')], (4, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
+        assert_eq!(iko[&wpt_pair('a', 'b')], (6, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
     }
 
     #[test]
-    fn test_key_obstacles_ex0() {
+    fn test_waypoint_obstacles_ex0() {
         let maze = parse_maze("#########
 #b.A.@.a#
 #########");
-        let ko = maze.key_obstacles((1,5));
-        assert_eq!(ko[&'a'], (2, HashSet::new()));
-        assert_eq!(ko[&'b'], (4, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
+        let wo = maze.waypoint_obstacles((1,5));
+        assert_eq!(wo[&'a'], (2, HashSet::new()));
+        assert_eq!(wo[&'b'], (4, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
     }
 
     #[test]
-    fn test_key_obstacles_ex2() {
+    fn test_waypoint_obstacles_ex2() {
         let maze = parse_maze("#################
 #i.G..c...e..H.p#
 ########.########
@@ -142,9 +142,9 @@ mod tests {
 ########.########
 #l.F..d...h..C.m#
 #################");
-        let ko = maze.key_obstacles((4,8));
-        assert_eq!(ko[&'a'], (3, HashSet::new()));
-        assert_eq!(ko[&'p'], (10, vec!['h'].iter().map(|x| *x).collect::<HashSet<_>>()));
+        let wo = maze.waypoint_obstacles((4,8));
+        assert_eq!(wo[&'a'], (3, HashSet::new()));
+        assert_eq!(wo[&'p'], (10, vec!['h'].iter().map(|x| *x).collect::<HashSet<_>>()));
     }
 
     #[test]
@@ -160,11 +160,11 @@ mod tests {
     }
 
     #[test]
-    fn test_key_pair() {
-        assert_eq!(('a', 'b'), key_pair('a', 'b'));
-        assert_eq!(('a', 'b'), key_pair('b', 'a'));
-        assert_eq!(('@', 'a'), key_pair('a', '@'));
-        assert_eq!(('@', 'a'), key_pair('@', 'a'));
+    fn test_wpt_pair() {
+        assert_eq!(('a', 'b'), wpt_pair('a', 'b'));
+        assert_eq!(('a', 'b'), wpt_pair('b', 'a'));
+        assert_eq!(('@', 'a'), wpt_pair('a', '@'));
+        assert_eq!(('@', 'a'), wpt_pair('@', 'a'));
     }
 
     #[test]
@@ -172,10 +172,10 @@ mod tests {
         let maze = parse_maze("#########
 #b.A.@.a#
 #########");
-        assert_eq!(maze.key_pos.get_by_left(&'@'), Some(&(1,5)));
+        assert_eq!(maze.wpt_pos.get_by_left(&'@'), Some(&(1,5)));
 
-        assert_eq!(maze.key_pos.get_by_left(&'a'), Some(&(1,7)));
-        assert_eq!(maze.key_pos.get_by_right(&(1,1)), Some(&'b'));
+        assert_eq!(maze.wpt_pos.get_by_left(&'a'), Some(&(1,7)));
+        assert_eq!(maze.wpt_pos.get_by_right(&(1,1)), Some(&'b'));
 
         assert_eq!(maze.door_pos.get_by_left(&'a'), Some(&(1,3)));
 
@@ -192,13 +192,13 @@ mod tests {
 
 fn parse_maze(maze: &str) -> Maze { 
     let mut passage_pos = HashSet::new();
-    let mut key_pos = BiMap::new();
+    let mut wpt_pos = BiMap::new();
     let mut door_pos = BiMap::new();
 
     for (i, line) in maze.lines().enumerate() {
         for (j, ch) in line.chars().enumerate() {
             if ch.is_lowercase() || ch == '@' {
-                key_pos.insert(ch, (i,j));
+                wpt_pos.insert(ch, (i,j));
                 passage_pos.insert((i,j));
             } else if ch.is_uppercase() {
                 door_pos.insert(ch.to_lowercase().to_string().chars().next().unwrap(), (i,j));
@@ -210,7 +210,7 @@ fn parse_maze(maze: &str) -> Maze {
     }
     return Maze{
         passages: passage_pos, 
-        key_pos, 
+        wpt_pos, 
         door_pos
     }
 }
