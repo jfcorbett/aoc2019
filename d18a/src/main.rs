@@ -102,9 +102,9 @@ impl Maze {
     }
 }
 
-fn wpt_pair(key1: char, key2: char) -> (char, char) {
-    if key1 < key2 {(key1, key2)} else {(key2, key1)}
-}
+// fn can_move(from_wpt: char, to_wpt: char, have_keys: HashSet<char>, wpt_pair_obst: &HashMap<(char, char), (usize, HashSet<char>)>) -> bool {
+
+// }
 
 #[cfg(test)]
 mod tests {
@@ -213,5 +213,9 @@ fn parse_maze(maze: &str) -> Maze {
         wpt_pos, 
         door_pos
     }
+}
+
+fn wpt_pair(key1: char, key2: char) -> (char, char) {
+    if key1 < key2 {(key1, key2)} else {(key2, key1)}
 }
 
