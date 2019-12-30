@@ -102,23 +102,34 @@ impl Maze {
     }
 }
 
-// fn can_move(from_wpt: char, to_wpt: char, have_keys: HashSet<char>, wpt_pair_obst: &HashMap<(char, char), (usize, HashSet<char>)>) -> bool {
-
-// }
+fn can_move(from_wpt: char, to_wpt: char, have_keys: HashSet<char>, wpt_pair_obst: &HashMap<(char, char), (usize, HashSet<char>)>) -> bool {
+    have_keys.is_superset(&wpt_pair_obst[&wpt_pair(from_wpt, to_wpt)].1)
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
+    fn test_can_move() {
+        let maze = parse_maze("#########
+#b.A.@.a#
+#########");
+        let wpo = maze.waypoint_pair_obstacles();
+        assert!(can_move('a', 'b', vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>(), &wpo));
+        assert!(!can_move('a', 'b', HashSet::new(), &wpo));
+        assert!(!can_move('@', 'b', HashSet::new(), &wpo));
+    }
+
+    #[test]
     fn test_waypoint_pair_obstacles() {
         let maze = parse_maze("#########
 #b.A.@.a#
 #########");
-        let iko = maze.waypoint_pair_obstacles();
-        assert_eq!(iko[&wpt_pair('@', 'a')], (2, HashSet::new()));
-        assert_eq!(iko[&wpt_pair('@', 'b')], (4, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
-        assert_eq!(iko[&wpt_pair('a', 'b')], (6, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
+        let wpo = maze.waypoint_pair_obstacles();
+        assert_eq!(wpo[&wpt_pair('@', 'a')], (2, HashSet::new()));
+        assert_eq!(wpo[&wpt_pair('@', 'b')], (4, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
+        assert_eq!(wpo[&wpt_pair('a', 'b')], (6, vec!['a'].iter().map(|x| *x).collect::<HashSet<_>>()));
     }
 
     #[test]
